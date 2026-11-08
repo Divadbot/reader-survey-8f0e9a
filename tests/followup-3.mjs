@@ -1,7 +1,8 @@
 /**
- * Issue 3 follow-up checks. Crossword is one choice: puzzle pages 14-15,
- * answer key page 16 only. Weather is page 18. The next PDF is still
- * forthcoming, so these checks do not clear the issue for publish.
+ * Issue 3 follow-up checks against the 18-page v7 PDF.
+ * History is pages 12-13. Crossword is one choice: puzzle pages 14-15,
+ * Answers page 16 only. Weather is page 18. About and On the Water
+ * on page 17 are not ratings. v7 is verified here and not published.
  *
  * Formspree is never contacted. Chrome resolves formspree.io to
  * 127.0.0.1, and every request to that host is answered locally.
@@ -30,8 +31,8 @@ const SECTIONS = [
   'Crafts (page 9)',
   'St. George and Southern Utah (page 10)',
   'Sports (page 11)',
-  'This Week in History (page 12)',
-  'Crossword (puzzle pages 14–15, answer key 16)',
+  'This Week in History (pages 12–13)',
+  'Crossword (puzzle pages 14–15, Answers 16)',
   'Weather (page 18)',
 ];
 
@@ -49,12 +50,12 @@ const FILLED = `THE WRITTEN WEEKLY: YOUR FEEDBACK ON ISSUE 3
    Crafts (page 9): (unanswered) / (unanswered)
    St. George and Southern Utah (page 10): (unanswered) / (unanswered)
    Sports (page 11): (unanswered) / (unanswered)
-   This Week in History (page 12): (unanswered) / (unanswered)
-   Crossword (puzzle pages 14–15, answer key 16): Skipped it / Less
+   This Week in History (pages 12–13): (unanswered) / (unanswered)
+   Crossword (puzzle pages 14–15, Answers 16): Skipped it / Less
       Comment: Test comment on the crossword.
    Weather (page 18): (unanswered) / (unanswered)
 
-2. Enjoyed most: Front page (page 1); The Nation (page 2); Crossword (puzzle pages 14–15, answer key 16)
+2. Enjoyed most: Front page (page 1); The Nation (page 2); Crossword (puzzle pages 14–15, Answers 16)
 
 3. Layout and print
    Type size: About right
@@ -104,6 +105,10 @@ function staticChecks() {
   assert.equal(html.includes('Weather (page 14)'), false);
   assert.equal(html.includes('(page 17)'), false);
   assert.equal((html.match(/class="cn">Crossword/g) || []).length, 1);
+  assert.equal(html.includes('answer key'), false);
+  assert.equal(html.includes('On the Water'), false);
+  assert.equal(html.includes('About This Edition'), false);
+  assert.equal((html.match(/class="cn">Answers/g) || []).length, 0);
   assert.equal(html.includes('Issue 2'), false);
   assert.equal(html.includes('ISSUE 2'), false);
   assert.match(html, /<title>The Written Weekly: Your feedback on Issue 3<\/title>/);
@@ -127,8 +132,9 @@ function staticChecks() {
   assert.deepEqual(cards, SECTIONS);
   assert.deepEqual(enjoyed, SECTIONS);
   assert.deepEqual(sec, SECTIONS);
-  assert.equal(html.includes('Crossword (puzzle pages 14–15, answer key 16)'), true);
-  assert.equal(cards.indexOf('Crossword (puzzle pages 14–15, answer key 16)'), 11);
+  assert.equal(html.includes('Crossword (puzzle pages 14–15, Answers 16)'), true);
+  assert.equal(cards.indexOf('This Week in History (pages 12–13)'), 10);
+  assert.equal(cards.indexOf('Crossword (puzzle pages 14–15, Answers 16)'), 11);
   assert.equal(cards.at(-1), 'Weather (page 18)');
   assert.equal((html.match(/name="r_11"/g) || []).length, 4);
   assert.equal((html.match(/name="r_12"/g) || []).length, 4);
@@ -165,7 +171,7 @@ async function fill(page) {
   for (const name of [
     'Front page (page 1)',
     'The Nation (page 2)',
-    'Crossword (puzzle pages 14–15, answer key 16)',
+    'Crossword (puzzle pages 14–15, Answers 16)',
   ]) {
     await page.click(`input[name="enj"][value="${name}"]`);
   }
@@ -174,7 +180,7 @@ async function fill(page) {
   assert.deepEqual(checked, [
     'Front page (page 1)',
     'The Nation (page 2)',
-    'Crossword (puzzle pages 14–15, answer key 16)',
+    'Crossword (puzzle pages 14–15, Answers 16)',
   ]);
   assert.equal(await page.$eval('#enjmsg', (el) => el.textContent), 'Up to three. Clear one to choose another.');
   await page.click('input[name="enj"][value="The Nation (page 2)"]');
@@ -186,7 +192,7 @@ async function fill(page) {
   assert.deepEqual(restored, [
     'Front page (page 1)',
     'The Nation (page 2)',
-    'Crossword (puzzle pages 14–15, answer key 16)',
+    'Crossword (puzzle pages 14–15, Answers 16)',
   ]);
 
   await page.click('input[name="ts"][value="About right"]');
@@ -247,7 +253,7 @@ function assertPosted(hit) {
   assert.equal(body._subject, 'The Written Weekly feedback: Issue 3');
   assert.equal(body.message, FILLED);
   assert.equal(body.message.includes('(skipped)'), false);
-  assert.equal(body.message.includes('Crossword (puzzle pages 14–15, answer key 16): Skipped it / Less'), true);
+  assert.equal(body.message.includes('Crossword (puzzle pages 14–15, Answers 16): Skipped it / Less'), true);
 }
 
 async function openPage(browser, port, mode) {
@@ -285,11 +291,11 @@ async function run() {
     assert.equal(blank.includes('(skipped)'), false);
     assert.equal(blank.includes('Skipped it'), false);
     assert.equal((blank.match(/\(unanswered\)/g) || []).length, 32);
-    assert.equal(blank.includes('Crossword (puzzle pages 14–15, answer key 16): (unanswered) / (unanswered)'), true);
-    assert.ok(blank.indexOf('Crossword (puzzle pages 14–15, answer key 16)') < blank.indexOf('Weather (page 18)'));
-    await blankPage.screenshot({ path: join(shots, 'issue3_answer16_survey_top.png') });
+    assert.equal(blank.includes('Crossword (puzzle pages 14–15, Answers 16): (unanswered) / (unanswered)'), true);
+    assert.ok(blank.indexOf('Crossword (puzzle pages 14–15, Answers 16)') < blank.indexOf('Weather (page 18)'));
+    await blankPage.screenshot({ path: join(shots, 'issue3_v7_survey_top.png') });
     const crossCard = await blankPage.evaluateHandle(() => document.querySelector('#ct_11').closest('.card'));
-    await crossCard.asElement().screenshot({ path: join(shots, 'issue3_answer16_crossword.png') });
+    await crossCard.asElement().screenshot({ path: join(shots, 'issue3_v7_crossword.png') });
     await blankPage.close();
     console.log('blank serialization passed');
 
@@ -298,7 +304,7 @@ async function run() {
     const message = await ok.page.evaluate(() => build());
     assert.equal(message, FILLED);
     console.log('filled serialization passed');
-    await ok.page.screenshot({ path: join(shots, 'issue3_answer16_filled.png'), fullPage: false });
+    await ok.page.screenshot({ path: join(shots, 'issue3_v7_filled.png'), fullPage: false });
     const sendPromise = ok.page.click('#sendbtn');
     await ok.page.waitForFunction(() => document.getElementById('sendbtn').textContent === 'Sending...');
     await waitFor(() => ok.hits.length === 1);
@@ -311,7 +317,7 @@ async function run() {
     assert.equal(await ok.page.$eval('#okv p', (el) => el.textContent), 'Your answers were sent. You can close this page.');
     assert.equal(await ok.page.$eval('#failv', (el) => el.style.display), 'none');
     assert.equal(await ok.page.$eval('#formwrap', (el) => el.style.display), 'none');
-    await ok.page.screenshot({ path: join(shots, 'issue3_answer16_success.png') });
+    await ok.page.screenshot({ path: join(shots, 'issue3_v7_success.png') });
     console.log('mock success passed');
 
     for (const mode of ['http', 'abort']) {
@@ -335,7 +341,7 @@ async function run() {
       ]);
       const usesMailto = await fail.page.evaluate(() => document.documentElement.innerHTML.includes("location.href='mailto:'+E"));
       assert.equal(usesMailto, true);
-      if (mode === 'http') await fail.page.screenshot({ path: join(shots, 'issue3_answer16_failure.png') });
+      if (mode === 'http') await fail.page.screenshot({ path: join(shots, 'issue3_v7_failure.png') });
       await fail.page.click('button.big.sec[onclick="edit()"]');
       assert.equal(await fail.page.$eval('#formwrap', (el) => el.style.display), 'block');
       assert.equal(await fail.page.$eval('input[name="r_11"]:checked', (el) => el.value), 'Skipped it');
